@@ -29,6 +29,12 @@
 
 ---
 
+## 🧱 技术栈
+- Java 17
+- Spring Boot 3.x
+- Spring Security 6
+---
+
 ## 🏗️ 项目结构
 
 ```text
