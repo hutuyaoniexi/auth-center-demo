@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 /**
  * 拦截 @RequirePerm，并在调用目标方法前做授权校验。
- *
+ * <p>
  * 优先级与兼容：
  * 1) perms() 非空：直接使用 perms
  * 2) 否则使用 perm + actions（兼容旧写法）
@@ -33,20 +33,28 @@ public class RequirePermAspect {
         this.checker = Objects.requireNonNull(checker, "PermissionChecker must not be null");
     }
 
+    /**
+     * 拦截 类 + 方法上的RequirePerm注解
+     */
     @Before("@within(com.demo.authcenter.annotation.RequirePerm) || @annotation(com.demo.authcenter.annotation.RequirePerm)")
     public void check(JoinPoint jp) {
+        // 1) 获取当前用户认证信息（用户信息 + 权限）
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) {
             throw new AccessDeniedException("Forbidden");
         }
 
+        // 2) 获取被调用的方法
         Method method = ((MethodSignature) jp.getSignature()).getMethod();
+
+        // 3) 算出“最终需要的权限/角色”
         Effective eff = resolveEffective(method);
 
         if (eff.roles.isEmpty() && eff.perms.isEmpty()) {
             throw new IllegalArgumentException("@RequirePerm must declare at least one of roles() or perms()/actions()");
         }
 
+        // 4) 校验 角色 + 权限 （调用PermissionChecker ）
         boolean roleOk = eff.roles.isEmpty() || hasAnyRole(auth, eff.roles);
         boolean permOk = eff.perms.isEmpty() || hasAnyPerm(auth, eff.perms);
 
@@ -104,6 +112,7 @@ public class RequirePermAspect {
 
     /**
      * 最终权限来源规则：
+     * <p>
      * - perms 非空：用 perms（推荐）
      * - perms 为空：用 permEnum + actions（兼容）
      * - perms 与 actions 同时非空：抛异常（避免两套都写造成歧义）
@@ -125,7 +134,9 @@ public class RequirePermAspect {
         return resolvePermsByEnum(permEnum, actions);
     }
 
-    /** 合并去重 + trim + 过滤空白 */
+    /**
+     * 合并去重 + trim + 过滤空白
+     */
     private static String[] union(String[] a, String[] b) {
         LinkedHashSet<String> set = new LinkedHashSet<>();
         addAll(set, a);
@@ -142,7 +153,9 @@ public class RequirePermAspect {
         }
     }
 
-    /** "ADMIN" -> "ROLE_ADMIN"，"ROLE_ADMIN" 保持不变 */
+    /**
+     * "ADMIN" -> "ROLE_ADMIN"，"ROLE_ADMIN" 保持不变
+     */
     private static List<String> normalizeRoles(String[] roles) {
         if (roles == null || roles.length == 0) return List.of();
         List<String> res = new ArrayList<>(roles.length);
@@ -156,7 +169,9 @@ public class RequirePermAspect {
         return res;
     }
 
-    /** perms 字符串归一化（trim + 过滤空白） */
+    /**
+     * perms 字符串归一化（trim + 过滤空白）
+     */
     private static List<String> normalizePerms(String[] perms) {
         List<String> res = new ArrayList<>(perms.length);
         for (String p : perms) {
@@ -170,6 +185,7 @@ public class RequirePermAspect {
 
     /**
      * 兼容旧写法：从 perm enum + actions 推导权限字符串列表。
+     * <p>
      * - actions 为空：不做枚举权限校验（只校验 roles）
      * - actions 非空：必须指定 permEnum，且枚举需实现 PermissionAction
      */
@@ -226,5 +242,6 @@ public class RequirePermAspect {
                 .collect(Collectors.toSet());
     }
 
-    private record Effective(RequirePerm.Mode mode, List<String> roles, List<String> perms) {}
+    private record Effective(RequirePerm.Mode mode, List<String> roles, List<String> perms) {
+    }
 }

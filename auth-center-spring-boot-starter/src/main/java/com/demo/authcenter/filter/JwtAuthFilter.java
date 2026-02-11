@@ -21,11 +21,13 @@ import java.util.Collections;
 import java.util.Objects;
 
 /**
- * JWT 鉴权过滤器：仅在请求携带 Bearer Token 时尝试认证并写入 SecurityContext。
- *
- * <p>约定：Authorization: Bearer &lt;token&gt;，sub=userId，authorities 为角色/权限字符串。</p>
- *
- * <p>策略：若未携带 token，则不做任何标记，按匿名请求放行，由业务侧授权规则决定是否需要认证。</p>
+ * JWT 鉴权过滤器
+ * <p>
+ * 功能：仅在请求携带 Bearer Token 时尝试认证并写入 SecurityContext。
+ * <p>
+ * 约定：Authorization: Bearer token ，sub=userId，authorities 为角色/权限字符串。
+ * <p>
+ * 策略：若未携带 token，则不做任何标记，按匿名请求放行，由业务侧授权规则决定是否需要认证。
  */
 public class JwtAuthFilter extends OncePerRequestFilter {
 
@@ -51,14 +53,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        // ✅ 无 token：不标记错误码，直接放行（交给业务授权规则决定）
+        // 1️⃣ 取token
         String token = jwtUtil.extractBearerToken(req.getHeader("Authorization"));
+        // 无 token：不标记错误码，直接放行（交给业务授权规则决定）
         if (token == null) {
             chain.doFilter(req, res);
             return;
         }
 
         try {
+            // 2️⃣ 检验
             Claims claims = jwtUtil.parseAndValidate(token);
             jwtUtil.validateAudience(claims);
             jwtUtil.validateAccessType(claims);
@@ -79,6 +83,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 throw new IllegalArgumentException("Missing or invalid sub(userId)");
             }
 
+            // 3️⃣ 获取用户信息 & 权限
             var user = authUserService.loadByUserId(userId);
             if (user == null) {
                 throw new IllegalArgumentException("User not found: " + userId);
@@ -92,6 +97,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     .map(SimpleGrantedAuthority::new)
                     .toList();
 
+            // 4️⃣ 放入SecurityContext
             var authentication = new UsernamePasswordAuthenticationToken(userId, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 

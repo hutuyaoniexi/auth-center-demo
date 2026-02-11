@@ -3,22 +3,7 @@ package com.demo.authcenter.store;
 import java.time.Instant;
 
 /**
- * TokenStore：用于管理 JWT 的“失效状态”，弥补 JWT 天然无状态的不足。
- *
- * <p>主要解决两类问题：
- * <ul>
- *   <li>主动注销 / 踢下线：将 access token 标记为失效</li>
- *   <li>Refresh rotation：旧 refresh token 必须立即作废，防止重放</li>
- * </ul>
- *
- * <p>设计约定：
- * <ul>
- *   <li>以 jti（JWT ID）作为唯一键</li>
- *   <li>失效状态只需保存到 token 自身的过期时间（expiresAt）</li>
- * </ul>
- *
- * <p>默认实现 {@code InMemoryTokenStore} 仅用于 demo/本地测试；
- * 生产环境建议业务方提供 Redis 等持久化实现并覆盖 Bean。</p>
+ * 用于管理 JWT 的“失效状态”，弥补 JWT 天然无状态的不足。
  */
 public interface TokenStore {
 

@@ -8,8 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
- * JSON 响应写出工具：
- * 负责将对象序列化为 JSON 并写入 HttpServletResponse。
+ * 将对象序列化为 JSON 并写入 HttpServletResponse。
  */
 public class JsonResponseWriter {
 

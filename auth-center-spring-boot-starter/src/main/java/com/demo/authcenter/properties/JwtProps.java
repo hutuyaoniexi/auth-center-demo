@@ -5,15 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.util.List;
 
 /**
- * JWT 配置属性（auth-center.jwt.*）：
- *
- * <p>用于配置 JWT 的签名密钥、发行方、受众以及 access/refresh 的过期策略。</p>
- *
- * <p>说明：
- * <ul>
- *   <li>Token 解析协议固定为：Authorization: Bearer &lt;token&gt;（不在此配置）</li>
- *   <li>本类仅承载 JWT 生成与校验所需参数，参数合法性由 JwtUtil 统一校验</li>
- * </ul>
+ * JWT 配置属性
  */
 @ConfigurationProperties(prefix = "auth-center.jwt")
 public class JwtProps {
@@ -27,15 +19,12 @@ public class JwtProps {
     private String secret;
 
     /**
-     * JWT issuer（iss）。
+     * 签发者
      */
     private String issuer = "auth-center";
 
     /**
-     * JWT audience（aud）。
-     *
-     * <p>校验时要求 Token 的 aud 至少包含其中任意一个值。</p>
-     * <p>建议配置为业务系统的唯一标识（如应用名）。</p>
+     * 接收方
      */
     private List<String> audience = List.of("demo-app");
 
